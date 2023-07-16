@@ -1,8 +1,27 @@
 # Filter Multiple Columns in Formula
-Uses Excel Array Features
+Applies filter to an array of rows by checking conditions in EACH column. Differs from standard filter function which filters one column.
+
+## Formula
+
+### Lambda
+`````
+=Lambda(sRng,findText,
+       Let(myFilter,BYROW(sRng,LAMBDA(r,OR(BYCOL(r,LAMBDA(c,c=findText))))),FILTER(sRng,myFilter)))
+`````
+
+### Let
+`````
+=LET(sRng,A1:C5,findText,"Tango",
+       myFilter,BYROW(sRng,LAMBDA(r,  OR(BYCOL(r,LAMBDA(c,c=findText))))),FILTER(sRng,myFilter))
+`````
 
 
-## Start Data
+## Example
+
+*Objective to filter for rows with `Tango` in any column*
+
+### Start Data
+
 | ColumnA | ColumnB | ColumnC |
 |---|---|---|
 | Alpha | Donkey | Dog |
@@ -12,17 +31,8 @@ Uses Excel Array Features
 | Tango | Slice | Tango |
 | Donkey | Bravo | Whale |
 
-*Objective to filter for rows with TANGO in any column*
 
-## Formula
-
-`````
-=LET(sRng,A1:C5,findText,"Tango",
-       myFilter,BYROW(sRng,LAMBDA(r,  OR(BYCOL(r,LAMBDA(c,c=findText))))),FILTER(sRng,myFilter))
-
-
-`````
-## Result
+### Result After Formula
 | ColumnA | ColumnB | ColumnC |
 |---|---|---|
 | Bravo | Tango | Cat |
@@ -40,3 +50,7 @@ Uses Excel Array Features
 
 ### Cell Contains Text
 Filters on rows where certain text exists in a cell in any column.
+
+## Requirements
+- Lambda Function
+- [Byrow function](https://bettersolutions.com/excel/functions/byrow-function.htm)
