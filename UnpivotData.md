@@ -1,9 +1,12 @@
 # Unpivot Data Function
-This can be used to bring a two dimensional set of data into a flat file (i.e. a load file).
-[Example File](https://onedrive.live.com/edit.aspx?resid=7D665EED73FFBB23!75536)
+Unpivots data to a flat file format in single cell. Handles multiple Row and column dimensions. 
+[Example File](https://1drv.ms/x/s!AiO7_3PtXmZ9hM4QgHxiI4TMG8To-g?e=4X1VkB)
 
 
-## Excel Without Lambda
+## Formula
+
+### Excel Let
+Works without Lambda, byCol and newer array tools
 `````
 =LET(dataValues,$F$10:$J$14,AxisRows,$B$10:$D$14,  AxisColumns,$F$7:$J$8,
       DimsInColumnAxis, ROWS(AxisColumns),
@@ -22,10 +25,10 @@ This can be used to bring a two dimensional set of data into a flat file (i.e. a
                       INDEX(AxisRows,r,modResult+1),
                    IF(modResult<totalDims,
                       INDEX(AxisColumns,modResult-zAddr,c),
-
                       INDEX(dataValues,r,c))),zFinalResult)
 `````
-## Excel With Lambda
+### Excel With Lambda
+Leverages the latest features.
 `````
 =LET(dataRng,F10:J14, rowAxis, B10:D14, colAxis,F7:J8,
           amountCol,   TOCOL(dataRng),
