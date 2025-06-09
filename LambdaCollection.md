@@ -1,7 +1,29 @@
 # Excel Custom Lambda Functions
 
 ## ReverseArray
-Reverses an array, capable of doing by columns
+Reverses an array. If more than one column is selected the reverse order is by row and then column.
+
+### Parameters
+- **iRay**: The array to be reversed.
+
+### Example
+
+#### Before
+
+| col A | col B | col C |
+|---|---|---|
+| 1 | 2 | 3 |
+| 4 | 5 | 6 |
+| 7 | 8 | 9 |
+| 10 | 11 | 12 |
+
+#### After
+| col A | col B | col C |
+|---|---|---|
+| 12 | 11 | 10 |
+| 9 | 8 | 7 |
+| 6 | 5 | 4 |
+| 3 | 2 | 1 |
 
 
 ### Formula
@@ -14,9 +36,13 @@ SEQUENCE(vRowCount,1),zSeq,SEQUENCE(rCount,COLUMNS(iRay),vRowCount,-1),XLOOKUP(z
 ## Get Last Row
 Gets max last row from column or columns ranges.
 
+### Parameters
+- **iRay**: The array to be reversed.
+
+
 ### Formula
 ````
-=LAMBDA(pColumn,LET(ƒ,LAMBDA(xcol,LET(textVal,"Θ",numVal,9.99999999999999E+307,
+=LAMBDA(pColumn,LET(ƒ,LAMBDA(xcol,LET(textVal,"🪑",numVal,9.99999999999999E+307,
 finalCellInRange,INDEX(xcol,ROWS(xcol),0),firstSearch,
 IFERROR(MATCH(textVal,xcol,1),0),firstSrchRng,
 INDEX(xcol,firstSearch+1,1):finalCellInRange,IF(COUNTA(firstSrchRng)=0,firstSearch,
@@ -27,15 +53,20 @@ LET(S,SEQUENCE(1,totCol),REDUCE(0,S,LAMBDA(old,eachCol,LET(iCol,DROP(INDEX(pColu
 old),old+ƒ(iCol))))))))
 ````
 
-
-
 ## UnpivotData
 
-Moves dynamic array of column axis to row axis
+Moves dynamic array of column axis to row axis. The row and column axis are not bound to the data set, thus users can select an entire row(s)/column.
+
+### Parameters
+- **iRows**: The row axis of the data. This is not bound by the data range, thus selecting an entire column(s) will work.
+- **iCols**: Column axis of the data, also not bound by the data range, thus selecting an entire row(s) will work.
+- **iData**: The data axis. This must be mapped accurately to match where the data will exist, however using zero suppression empowers the user to extend this with limited concern.
+- **suppressZero**: Optional boolean variable. Setting to `true` will remove all blanks and zero values from output. By default all values will be included.
+
 
 ### Formula
 `````
-=LAMBDA(iRows,iCols,iData,LET(
+=LAMBDA(iRows,iCols,iData,[suppressZero],LET(
     tCol, COLUMNS(iData),dColAx,ROWS(iCols),
     tRow, ROWS(iData),dRowAx,COLUMNS(iRows),
     cPad, COLUMN(INDEX(iData,1,1))-COLUMN(INDEX(iCols,1,1)),
@@ -49,9 +80,10 @@ Moves dynamic array of column axis to row axis
    zAddr, dRowAx-1,
     zMod, MOD(zSeq,tCols),
        c, MOD(INT(zSeq/tCols),tCol)+1,
-       r, INT(zSeq/zDiv)+1,
+       r, INT(zSeq/zDiv)+1,iResult,
    IF(zMod<dRowAx,INDEX(aRow,r,zMod+1),
-      IF(zMod<tDims,INDEX(aCol,zMod-zAddr,c),INDEX(iData,r,c)))))
+      IF(zMod<tDims,INDEX(aCol,zMod-zAddr,c),INDEX(iData,r,c))),
+IF(suppressZero,FILTER(iResult,INDEX(iResult,,tCols)<>0),iResult)))
 `````
 
 ### Example
@@ -69,7 +101,6 @@ Moves dynamic array of column axis to row axis
 | Marvel | HR | Costs |  | 511 | 611 | 711 | 811 | 911 |
 
 #### After
-
 
 | Disney | Tickets | Revenue | Jan | Actual | 507 |
 |---|---|---|---|---|---|
@@ -97,3 +128,67 @@ Moves dynamic array of column axis to row axis
 | Marvel | HR | Costs | Mar | Actual | 711 |
 | Marvel | HR | Costs | Apr | Budget | 811 |
 | Marvel | HR | Costs | May | Budget | 911 |
+
+
+## FilterMultiple
+Applies the same filter to more than one column.
+
+### Parameters
+- **rng2Filter**: Data to be evaluated on a row by row basis. Note that this will also be returned unless third parameter `returnRange` is provided.
+- **ƒeachCell**: Lambda function that must have one input that will evaluate each cell and return `true` or `false`.
+    - Example `Lambda(eachCell,eachCell="Actual")`
+- **returnRange**: Optional parameter to provide a different range to return after filter. Note if row count of `rng2Filter` and `returnRange` are not equal, value of `#RowCountMismatch` will be returned.
+
+
+### Formula
+````
+=LAMBDA(rng2Filter,ƒeachCell,[returnRange],
+    IF(IF(NOT(ISOMITTED(returnRange)),ROWS(returnRange)<>ROWS(rng2Filter)),"#RowCountMismatch",
+    LET(zReturnRng,IF(ISOMITTED(returnRange),rng2Filter,returnRange), zFilter,BYROW(rng2Filter,LAMBDA(aRow,
+    REDUCE(FALSE,aRow,LAMBDA(iPrev,eVal,
+    IF(iPrev=TRUE,TRUE,ƒeachCell(eVal)))))),
+    FILTER(zReturnRng,zFilter,"#noMatches"))))
+````
+### Example
+The following examples are based on this starting dataset beginning in cell `a1`.
+
+#### Starting Data
+| colA | colB | colC | colD |
+|---|---|---|---|
+| Item1 | 4/30/2024 | Fines | 510 |
+| Item2 | 6/15/2024 | Insurance | 443 |
+| Item3 | 4/20/2025 | Insurance | 405 |
+| Item4 | 7/25/2024 | Fees | 512 |
+| Item5 | 7/16/2024 | Cogs | 216 |
+| Item6 | 8/29/2025 | Cogs | 218 |
+| Item7 | 4/2/2025 | Cogs | 357 |
+| Item8 | 9/15/2024 | Fines | 271 |
+| Item9 | 1/6/2025 | Fines | 323 |
+
+
+
+#### Result A
+`=multiFilter(C1:D9,LAMBDA(α,IF(α="Fines",TRUE,IF(ISNUMBER(α),α>500))),A1:D9)`
+
+Returns all columns checking in alast two columnsif fines OR amount is over 500.
+
+
+|  |  |  |  |
+|---|---|---|---|
+| Item1 | 4/30/2024 | Fines | 510 |
+| Item4 | 7/25/2024 | Issues | 512 |
+| Item8 | 9/15/2024 | Fines | 271 |
+| Item9 | 1/6/2025 | Fines | 323 |
+
+#### Result B
+`=multiFilter(C1:D9,LAMBDA(α,α="Cogs"),HSTACK(B1:B9,D1:D9))`
+
+Returns columns b and d checking if any cells in c:d have 'cogs'.
+
+
+|  |  |
+|---|---|
+| 7/16/2024 | 216 |
+| 8/29/2025 | 218 |
+| 4/2/2025 | 357 |
+
