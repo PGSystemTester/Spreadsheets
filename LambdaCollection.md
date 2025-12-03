@@ -130,6 +130,47 @@ IF(suppressZero,FILTER(iResult,INDEX(iResult,,tCols)<>0),iResult)))
 | Marvel | HR | Costs | May | Budget | 911 |
 
 
+## StackSplit
+Splits array members based on text values in each element.
+
+### Parameters
+- **dataCol**: Single column with text values that are to be split
+- **rowAxis**: (Optional) Datarange that will be repeat/pivoted with new elements
+- **splitChar**: (Optional) Text character(s) to be used to split elements
+- **includeIndex**: (Optional) Adds column to the left with the lookup index (1-based).
+
+### Example
+
+#### Before
+| ColA                  |
+|-----------------------|
+| echo,charlie          |
+| bravo,zulu,kilo,hotel |
+| alpha,tango           |
+| juliet,sierra         |
+
+#### After
+| ColA    |
+|---------|
+| echo    |
+| charlie |
+| bravo   |
+| zulu    |
+| kilo    |
+| hotel   |
+| juliet  |
+| sierra  |
+| alpha   |
+| tango   |
+
+
+### Formula
+````F#
+=LAMBDA(dataCol,[rowAxis],[splitChar],[includeIndex],
+LET(Θ,IF(ISOMITTED(splitChar),",",splitChar),zvals,TRANSPOSE(TEXTSPLIT(TEXTJOIN(Θ,FALSE,dataCol),Θ)),iRef,VSTACK(0,SCAN(0,DROP(dataCol,-1),LAMBDA(oldval,eRow,oldval+1+LEN(eRow)-LEN(SUBSTITUTE(eRow,Θ,""))))),iRow,MATCH(SEQUENCE(ROWS(zvals),1,0,1),iRef,1),testRowAxis,IF(ISOMITTED(rowAxis),zvals,HSTACK(INDEX(rowAxis,iRow,SEQUENCE(1,COLUMNS(rowAxis))),zvals)),IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
+````
+
+
 ## FilterMultiple
 Applies the same filter to more than one column.
 
