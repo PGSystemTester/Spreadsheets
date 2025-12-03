@@ -37,20 +37,12 @@ SEQUENCE(vRowCount,1),zSeq,SEQUENCE(rCount,COLUMNS(iRay),vRowCount,-1),XLOOKUP(z
 Gets max last row from column or columns ranges.
 
 ### Parameters
-- **iRay**: The array to be reversed.
+- **col_Range**: The range of columns to be searched.
 
 
 ### Formula
 ````
-=LAMBDA(pColumn,LET(ƒ,LAMBDA(xcol,LET(textVal,"🪑",numVal,9.99999999999999E+307,
-finalCellInRange,INDEX(xcol,ROWS(xcol),0),firstSearch,
-IFERROR(MATCH(textVal,xcol,1),0),firstSrchRng,
-INDEX(xcol,firstSearch+1,1):finalCellInRange,IF(COUNTA(firstSrchRng)=0,firstSearch,
-LET(secondSearch,IFERROR(MATCH(numVal,firstSrchRng,1),0)+firstSearch,secondSearchRng,
-INDEX(xcol,secondSearch+1,1):finalCellInRange,IF(COUNTA(secondSearchRng)=0,secondSearch,
-XMATCH(FALSE,ISBLANK(xcol),0,-1)))))),totCol,COLUMNS(pColumn),IF(totCol=1,ƒ(pColumn),
-LET(S,SEQUENCE(1,totCol),REDUCE(0,S,LAMBDA(old,eachCol,LET(iCol,DROP(INDEX(pColumn,,eachCol),
-old),old+ƒ(iCol))))))))
+'=LAMBDA(col_Range,ROWS(TRIMRANGE(col_Range,2)))'
 ````
 
 ## UnpivotData
