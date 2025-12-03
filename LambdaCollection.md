@@ -158,12 +158,10 @@ Splits array members based on text values in each element.
 
 ### Formula
 ````F#
-=LAMBDA(dataCol,[rowAxis],[splitChar],[includeIndex],
-LET(Θ,IF(ISOMITTED(splitChar),",",splitChar),zvals,TRANSPOSE(TEXTSPLIT(TEXTJOIN(Θ,FALSE,dataCol),Θ)),
-iRef,VSTACK(0,SCAN(0,DROP(dataCol,-1),
-LAMBDA(oldval,eRow,oldval+1+LEN(eRow)-LEN(SUBSTITUTE(eRow,Θ,""))))),
-iRow,MATCH(SEQUENCE(ROWS(zvals),1,0,1),iRef,1),testRowAxis,IF(ISOMITTED(rowAxis),zvals,
-HSTACK(INDEX(rowAxis,iRow,SEQUENCE(1,COLUMNS(rowAxis))),zvals)),
+=LAMBDA(dataCol,[rowAxis],[splitChar],[includeIndex],LET(Θ,IF(ISOMITTED(splitChar),",",splitChar),zvals,
+TRANSPOSE(TEXTSPLIT(TEXTJOIN(Θ,FALSE,dataCol),Θ)),iRef,VSTACK(0,SCAN(0,DROP(dataCol,IF(ROWS(dataCol)=1,0,-1)),
+LAMBDA(oldval,eRow,oldval+1+LEN(eRow)-LEN(SUBSTITUTE(eRow,Θ,""))))),iRow,MATCH(SEQUENCE(ROWS(zvals),1,0,1),iRef,1),
+testRowAxis,IF(ISOMITTED(rowAxis),zvals,HSTACK(INDEX(rowAxis,iRow,SEQUENCE(1,COLUMNS(rowAxis))),zvals)),
 IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 ````
 
