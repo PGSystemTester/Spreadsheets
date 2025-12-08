@@ -165,6 +165,22 @@ testRowAxis,IF(ISOMITTED(rowAxis),zvals,HSTACK(INDEX(rowAxis,iRow,SEQUENCE(1,COL
 IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 ````
 
+## excludeColumns
+Excudes columns as a numeric array. Exactly the opposite of ChooseCols.
+
+### Parameters
+- **allData**: Data to apply exclusion on .
+- **columnsToExclude**: Column(s) to exclude. Can be a single integer or an array. 1-based (consistent with excel)
+    - For array use `{1,3,5}` format
+    - Can also use sequence as `Sequence(1,3,1,2)`
+
+### Formula
+````F#
+ =LAMBDA(allData,columnsToExclude,LET(idx,SEQUENCE(1,COLUMNS(allData)),
+ chkList,hstack(columnsToExclude),keepMask,ISNA(MATCH(idx,chkList, 0)),FILTER(allData,keepMask)))
+````
+
+
 
 ## FilterMultiple
 Applies the same filter to more than one column.
