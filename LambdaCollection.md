@@ -165,6 +165,21 @@ testRowAxis,IF(ISOMITTED(rowAxis),zvals,HSTACK(INDEX(rowAxis,iRow,SEQUENCE(1,COL
 IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 ````
 
+
+## Reconcile
+- Takes two datasets and lists numberical differences
+- Must have same number of columns, rows are dynamic
+
+
+
+### Formula
+````F#
+=LAMBDA(startData,endData,[measuresPosition],[KeepNoChanges],LET(zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),"mismatched num columns",LET(pureStart,TRIMRANGE(startData),pureCompare,TRIMRANGE(endData),rCountFirstSetData,ROWS(pureStart),combinedData,VSTACK(HSTACK(pureStart,MAKEARRAY(ROWS(pureStart),1,LAMBDA(r,c,"Start"))),HSTACK(pureCompare,MAKEARRAY(ROWS(pureCompare),1,LAMBDA(r,c,"End")))),numIndex,IF(ISNUMBER(measuresPosition),measuresPosition,zColumnCount),colFilter,HSTACK(SEQUENCE(1,COLUMNS(startData))<>numIndex,FALSE), rowAxis,FILTER(combinedData,colFilter), numData,CHOOSECOLS(combinedData,numIndex),iPivot,DROP(PIVOTBY(rowAxis,TAKE(combinedData,,-1),numData,SUM,0,0,,0,,NOT(ISBLANK(numData))),1), iDelta,MAP(TAKE(TAKE(iPivot,,-2),,1),TAKE(iPivot,,-1),LAMBDA(Ω,Θ,-N(Ω)+N(Θ))),w▲,HSTACK(iPivot,iDelta),iLastOne,IF(KeepNoChanges=TRUE,w▲,FILTER(w▲,TAKE(w▲,,-1)<>0,"no changes")),iLastOne))))
+````
+----
+
+
+
 ## excludeColumns
 Excudes columns as a numeric array. Exactly the opposite of ChooseCols.
 
