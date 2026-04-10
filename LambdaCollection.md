@@ -1,5 +1,104 @@
 # Excel Custom Lambda Functions
 
+## KeyCompare
+
+Provides a fast, flexible, and formula-only solution for comparing structured datasets in Excel — no Power Query, VBA, or external tools required.
+
+---
+
+### Overview
+
+`KeyCompare` is a reusable Excel LAMBDA function designed to compare two datasets (typically master data or dimension tables) and identify:
+
+- New records  
+- Removed records  
+- Changed records (based on full row comparison)  
+- Optional column-level change highlighting  
+
+It is optimized for structured datasets where a **key column uniquely identifies each record**.
+
+### 🧾 Parameters
+
+| Parameter | Required | Description |
+|----------|--------|-------------|
+| `startData` | ✅ | Original dataset (baseline) |
+| `endData` | ✅ | Updated dataset to compare against |
+| `keyIdCol` | ❌ | Column index of the unique key (default = 1) |
+| `displayOnlyChanges` | ❌ | If `TRUE`, masks unchanged column values |
+| `txtNoChange` | ❌ | Text used to represent unchanged values (default = `"....."`) |
+
+
+### Formula
+```
+=LAMBDA(startData,endData,[keyIdCol],[displayOnlyChanges],[txtNoChange],
+LET(idCol,IF(ISOMITTED(keyIdCol),1,keyIdCol),showChangesOnly,displayOnlyChanges,txtRemove,"Removed",txtChanged,"Changed",txtNew,"New",zSplitter,"→",txtNoChanges,"No Changes",
+fxScopData,LAMBDA(_allData,LET(startRange,TRIMRANGE(_allData),FILTER(startRange,INDEX(startRange,,idCol)<>""))),sPure,fxScopData(startData),ePure,fxScopData(endData),idStartdata,INDEX(sPure,,idCol),idEndData,INDEX(ePure,,idCol),oldMembers,BYROW(sPure,LAMBDA(aVal,IF(ISNA(MATCH(INDEX(aVal,1,idCol),idEndData,0)),TRUE,TEXTJOIN(zSplitter,FALSE,aVal)))),
+newMembers,BYROW(ePure,LAMBDA(aVal,
+LET(existsInStart,ISNUMBER(MATCH(INDEX(aVal,1,idCol),idStartdata,0)),
+        hasExactMatch,IF(existsInStart,LET(zJoinValues,TEXTJOIN(zSplitter,FALSE,aVal),ISNUMBER(MATCH(zJoinValues,oldMembers,0)))),
+        IF(NOT(existsInStart),txtNew,
+            IF(hasExactMatch,0,txtChanged)
+        )))),fullBlock,VSTACK(HSTACK(IF(oldMembers=TRUE,txtRemove,0),sPure),HSTACK(newMembers,ePure)),zRay,FILTER(fullBlock,INDEX(fullBlock,,1)<>0,txtNoChanges),boolChoiceDisplay,IF(displayOnlyChanges,INDEX(zRay,1,1)<>txtNoChanges),IF(boolChoiceDisplay,
+LET(txtNoChange,IF(ISOMITTED(txtNoChange),".....",txtNoChange),deltaRay,MAKEARRAY(ROWS(zRay),COLUMNS(zRay),LAMBDA(r,c,LET(newValue,INDEX(zRay,r,c),iType,INDEX(zRay,r,1),zKeyId,INDEX(zRay,r,2),IF(OR(c<3,iType<>txtChanged),newValue,LET(oldValue,XLOOKUP(zKeyId,INDEX(sPure,,1),INDEX(sPure,,c-1),newValue),IF(oldValue=newValue,txtNoChange,newValue)))))),deltaRay),zRay)))
+```
+
+
+### Design Notes
+
+- Uses `TEXTJOIN` to create row-level fingerprints for fast comparison  
+- Avoids full dataset joins for performance  
+- Built entirely with native Excel dynamic array functions  
+- Handles:
+  - Missing keys  
+  - Blank rows  
+  - Variable dataset sizes  
+
+### Assumptions
+
+- Key column must uniquely identify records  
+- Column structure between datasets must match  
+- Data types should be consistent between datasets  
+
+### Use Cases
+
+- SharePoint Lists, Masterdata Validation
+- Pre/post load reconciliation  
+- Data migration validation  
+- Financial dimension auditing  
+- Comparing exports from different systems  
+
+#### 🎯 Optional Feature: Change Highlighting
+
+When `displayOnlyChanges = TRUE`:
+
+- Only changed column values are shown  
+- Unchanged columns are replaced with a placeholder (default: `"....."`)
+
+
+### Behavior
+
+#### ✔ New Records
+- Present in `endData` but not in `startData`  
+- Status = `New`
+
+#### ✔ Removed Records
+- Present in `startData` but not in `endData`  
+- Status = `Removed`
+
+#### ✔ Changed Records
+- Same key exists in both datasets  
+- At least one column differs  
+- Status = `Changed`
+
+#### ✔ Unchanged Records
+- Excluded from output  
+
+### 📄 License
+
+Use freely. Modify as needed. Attribution appreciated.
+
+
+----
 ## ReverseArray
 Reverses an array. If more than one column is selected the reverse order is by row and then column.
 
