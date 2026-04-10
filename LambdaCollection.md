@@ -23,9 +23,9 @@ It is optimized for structured datasets where a **key column uniquely identifies
 |----------|--------|-------------|
 | `startData` | ✅ | Original dataset (baseline) |
 | `endData` | ✅ | Updated dataset to compare against |
-| `keyIdCol` | ❌ | Column index of the unique key (default = 1) |
-| `displayOnlyChanges` | ❌ | If `TRUE`, masks unchanged column values |
-| `txtNoChange` | ❌ | Text used to represent unchanged values (default = `"....."`) |
+| `keyIdCol` |  | Column index of the unique key (default = 1) |
+| `displayOnlyChanges` |  | If `TRUE`, masks unchanged column values |
+| `txtNoChange` |  | Text used to represent unchanged values (default = `"....."`) |
 
 
 ### Formula
@@ -41,6 +41,46 @@ LET(existsInStart,ISNUMBER(MATCH(INDEX(aVal,1,idCol),idStartdata,0)),
         )))),fullBlock,VSTACK(HSTACK(IF(oldMembers=TRUE,txtRemove,0),sPure),HSTACK(newMembers,ePure)),zRay,FILTER(fullBlock,INDEX(fullBlock,,1)<>0,txtNoChanges),boolChoiceDisplay,IF(displayOnlyChanges,INDEX(zRay,1,1)<>txtNoChanges),IF(boolChoiceDisplay,
 LET(txtNoChange,IF(ISOMITTED(txtNoChange),".....",txtNoChange),deltaRay,MAKEARRAY(ROWS(zRay),COLUMNS(zRay),LAMBDA(r,c,LET(newValue,INDEX(zRay,r,c),iType,INDEX(zRay,r,1),zKeyId,INDEX(zRay,r,2),IF(OR(c<3,iType<>txtChanged),newValue,LET(oldValue,XLOOKUP(zKeyId,INDEX(sPure,,1),INDEX(sPure,,c-1),newValue),IF(oldValue=newValue,txtNoChange,newValue)))))),deltaRay),zRay)))
 ```
+
+### 📸 Before vs After Example
+
+#### Input Data
+
+**Start Data**
+
+| ID | Name  | Region | Amount |
+|----|------|--------|--------|
+| A1 | Alpha | West   | 100    |
+| A2 | Beta  | East   | 200    |
+| A3 | Gamma | North  | 300    |
+
+**End Data**
+
+| ID | Name  | Region | Amount |
+|----|------|--------|--------|
+| A1 | Alpha | West   | 150    |
+| A2 | Beta  | East   | 200    |
+| A4 | Delta | South  | 400    |
+
+---
+
+#### Output (Standard)
+
+| Status  | ID | Name  | Region | Amount |
+|--------|----|------|--------|--------|
+| Changed | A1 | Alpha | West   | 150    |
+| Removed | A3 | Gamma | North  | 300    |
+| New     | A4 | Delta | South  | 400    |
+
+---
+
+#### Output (displayOnlyChanges = TRUE)
+
+| Status  | ID | Name  | Region | Amount |
+|--------|----|------|--------|--------|
+| Changed | A1 | ..... | ..... | 150    |
+| Removed | A3 | Gamma | North | 300    |
+| New     | A4 | Delta | South | 400    |
 
 
 ### Design Notes
