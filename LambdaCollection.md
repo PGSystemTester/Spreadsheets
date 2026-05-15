@@ -308,21 +308,17 @@ IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 ## Reconcile
 - Takes two datasets and lists numberical differences
 - Must have same number of columns, rows are dynamic
-- Optional parameter of maxThreshold sets delta amount maximum to exclude (defaults to zero)
+- Data is assumed to be far right column
+- _Optional Paremeters:_
+     -  **maxTolerance**: sets maximum amount of delta to not include (defaults to zero if ommited)
+     -  **excludeHeader**: set to `TRUE` to exclude header row
+     -  **lableStartData**: term to show for starting data
+     -  **lableEndData**: term to show for ending data
 
 
 ### Formula
 ````F#
-=LAMBDA(startData,endData,[maxThreshold],
-LET(zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),"mismatched num columns",
-LET(pStart,TRIMRANGE(startData),pEnd,TRIMRANGE(endData),limitValueDetla,ABS(IF(ISOMITTED(maxThreshold),0,maxThreshold)),
-combinedData,VSTACK(HSTACK(pStart,MAKEARRAY(ROWS(pStart),1,LAMBDA(r,c,"Start"))),HSTACK(pEnd,MAKEARRAY(ROWS(pEnd),1,LAMBDA(r,c,"End")))),
-rowAxis,DROP(combinedData,,-2),
-numData,INDEX(combinedData,,zColumnCount),
-iPivot,DROP(PIVOTBY(rowAxis,TAKE(combinedData,,-1),numData,SUM,0,0,,0),1),
-zStartDataCol,INDEX(iPivot,,zColumnCount),zEndDataCol,INDEX(iPivot,,zColumnCount+1),
-iDelta,N(zStartDataCol)-N(zEndDataCol),
-boolDelta,ABS(iDelta)>limitValueDetla, dataWithDelta,HSTACK(iPivot,iDelta),zFilteredData,FILTER(dataWithDelta,boolDelta,"No Changes"),zFilteredData))))
+=LAMBDA(startData,endData,[maxTolerance],[excludeHeader],[lableStartData],[lableEndData],LET(termWrongColCount,"# cols differ",termStart,IF(ISOMITTED(lableStartData),"Starting",lableStartData),termEnd,IF(ISOMITTED(lableStartData),"Ending",lableStartData),termChanges,"Changes",termNoChanges,"No Changes", zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),termWrongColCount,LET(pStart,TRIMRANGE(endData),pEnd,TRIMRANGE(startData),limitValueDetla,ABS(IF(ISOMITTED(maxTolerance),0,maxTolerance)),combinedData,VSTACK(HSTACK(pStart,MAKEARRAY(ROWS(pStart),1,LAMBDA(r,c,termStart))),HSTACK(pEnd,MAKEARRAY(ROWS(pEnd),1,LAMBDA(r,c,termEnd)))),rowAxis,DROP(combinedData,,-2),numData,INDEX(combinedData,,zColumnCount), iPivot,DROP(PIVOTBY(rowAxis,TAKE(combinedData,,-1),numData,SUM,0,0,,0),1),zStartDataCol,INDEX(iPivot,,zColumnCount),zEndDataCol,INDEX(iPivot,,zColumnCount+1), iDelta,N(zEndDataCol)-N(zStartDataCol),boolDelta,ABS(iDelta)>limitValueDetla, dataWithDelta,HSTACK(iPivot,iDelta),zFilteredData,FILTER(dataWithDelta,boolDelta,termNoChanges),zTopHeader,IF(COUNTA(zFilteredData)>1, MAKEARRAY(1,zColumnCount+2,LAMBDA(r,c,IF(c=zColumnCount,termStart,IF(c=zColumnCount+1,termEnd,IF(c=zColumnCount+2,termChanges,""))))),""),IF(excludeHeader,zFilteredData,IF(COUNTA(zFilteredData)=1,zFilteredData,VSTACK(zTopHeader,zFilteredData)))))))
 ````
 ----
 
