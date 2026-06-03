@@ -32,10 +32,10 @@ It is optimized for structured datasets where a **key column uniquely identifies
 ```
 =LAMBDA(startData,endData,[keyIdCol],[displayOnlyChanges],[txtNoChange],
 LET(idCol,IF(ISOMITTED(keyIdCol),1,keyIdCol),showChangesOnly,displayOnlyChanges,txtRemove,"Removed",txtChanged,"Changed",txtNew,"New",zSplitter,"→",txtNoChanges,"No Changes",
-fxScopData,LAMBDA(_allData,LET(startRange,TRIMRANGE(_allData),FILTER(startRange,INDEX(startRange,,idCol)<>""))),sPure,fxScopData(startData),ePure,fxScopData(endData),idStartdata,INDEX(sPure,,idCol),idEndData,INDEX(ePure,,idCol),oldMembers,BYROW(sPure,LAMBDA(aVal,IF(ISNA(MATCH(INDEX(aVal,1,idCol),idEndData,0)),TRUE,TEXTJOIN(zSplitter,FALSE,aVal)))),
-newMembers,BYROW(ePure,LAMBDA(aVal,
-LET(existsInStart,ISNUMBER(MATCH(INDEX(aVal,1,idCol),idStartdata,0)),
-        hasExactMatch,IF(existsInStart,LET(zJoinValues,TEXTJOIN(zSplitter,FALSE,aVal),ISNUMBER(MATCH(zJoinValues,oldMembers,0)))),
+fxScopData,LAMBDA(_allData,LET(startRange,TRIMRANGE(_allData),FILTER(startRange,INDEX(startRange,,idCol)<>""))),sPure,fxScopData(startData),ePure,fxScopData(endData),idStartdata,INDEX(sPure,,idCol),idEndData,INDEX(ePure,,idCol),oldMembers,BYROW(sPure,LAMBDA(_,IF(ISNA(MATCH(INDEX(_,1,idCol),idEndData,0)),TRUE,TEXTJOIN(zSplitter,FALSE,_)))),
+newMembers,BYROW(ePure,LAMBDA(_,
+LET(existsInStart,ISNUMBER(MATCH(INDEX(_,1,idCol),idStartdata,0)),
+        hasExactMatch,IF(existsInStart,LET(zJoinValues,TEXTJOIN(zSplitter,FALSE,_),ISNUMBER(MATCH(zJoinValues,oldMembers,0)))),
         IF(NOT(existsInStart),txtNew,
             IF(hasExactMatch,0,txtChanged)
         )))),fullBlock,VSTACK(HSTACK(IF(oldMembers=TRUE,txtRemove,0),sPure),HSTACK(newMembers,ePure)),zRay,FILTER(fullBlock,INDEX(fullBlock,,1)<>0,txtNoChanges),boolChoiceDisplay,IF(displayOnlyChanges,INDEX(zRay,1,1)<>txtNoChanges),IF(boolChoiceDisplay,
@@ -107,7 +107,7 @@ LET(txtNoChange,IF(ISOMITTED(txtNoChange),".....",txtNoChange),deltaRay,MAKEARRA
 - Financial dimension auditing  
 - Comparing exports from different systems  
 
-#### 🎯 Optional Feature: Change Highlighting
+####  Optional Feature: Change Highlighting
 
 When `displayOnlyChanges = TRUE`:
 
@@ -143,7 +143,7 @@ Use freely. Modify as needed. Attribution appreciated.
 Reverses an array. If more than one column is selected the reverse order is by row and then column.
 
 ### Parameters
-- **iRay**: The array to be reversed.
+- **array**: The array to be reversed.
 
 ### Example
 
@@ -167,8 +167,8 @@ Reverses an array. If more than one column is selected the reverse order is by r
 
 ### Formula
 ````
-=LAMBDA(iRay,LET(rCount,ROWS(iRay),iFlat,TOCOL(iRay),vRowCount,ROWS(iFlat),vRay,
-SEQUENCE(vRowCount,1),zSeq,SEQUENCE(rCount,COLUMNS(iRay),vRowCount,-1),XLOOKUP(zSeq,vRay,iFlat)))
+=LAMBDA(array,LET(rCount,ROWS(array),iFlat,TOCOL(array),vRowCount,ROWS(iFlat),vRay,
+SEQUENCE(vRowCount,1),zSeq,SEQUENCE(rCount,COLUMNS(array),vRowCount,-1),XLOOKUP(zSeq,vRay,iFlat)))
 ````
 
 
@@ -318,11 +318,9 @@ IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 
 ### Formula
 ````F#
-=LAMBDA(startData,endData,[maxTolerance],[excludeHeader],[lableStartData],[lableEndData],[lableDelta],LET(termWrongColCount,"# cols differ",termStart,IF(ISOMITTED(lableStartData),"Starting",lableStartData),termEnd,IF(ISOMITTED(lableEndData),"Ending",lableEndData),termChanges,IF(ISOMITTED(lableDelta),"Changes",lableDelta),termNoChanges,"No Changes",zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),termWrongColCount,LET(pStart,TRIMRANGE(endData),pEnd,TRIMRANGE(startData),limitValueDetla,ABS(IF(ISOMITTED(maxTolerance),0,maxTolerance)),combinedData,VSTACK(HSTACK(pStart,MAKEARRAY(ROWS(pStart),1,LAMBDA(r,c,termStart))),HSTACK(pEnd,MAKEARRAY(ROWS(pEnd),1,LAMBDA(r,c,termEnd)))),rowAxis,DROP(combinedData,,-2),numData,INDEX(combinedData,,zColumnCount), iPivot,DROP(PIVOTBY(rowAxis,TAKE(combinedData,,-1),numData,SUM,0,0,,0),1),zStartDataCol,INDEX(iPivot,,zColumnCount),zEndDataCol,INDEX(iPivot,,zColumnCount+1), iDelta,N(zEndDataCol)-N(zStartDataCol),boolDelta,ABS(iDelta)>limitValueDetla, dataWithDelta,HSTACK(iPivot,iDelta),zFilteredData,FILTER(dataWithDelta,boolDelta,termNoChanges),zTopHeader,IF(COUNTA(zFilteredData)>1, MAKEARRAY(1,zColumnCount+2,LAMBDA(r,c,IF(c=zColumnCount,termStart,IF(c=zColumnCount+1,termEnd,IF(c=zColumnCount+2,termChanges,""))))),""),IF(excludeHeader,zFilteredData,IF(COUNTA(zFilteredData)=1,zFilteredData,VSTACK(zTopHeader,zFilteredData)))))))
+=LAMBDA(startData,endData,[maxTolerance],[excludeHeader],[lableStartData],[lableEndData],[lableDelta],LET(termWrongColCount,"# cols differ",termStart,IF(ISOMITTED(lableStartData),"Starting",lableStartData),termEnd,IF(ISOMITTED(lableEndData),"Ending",lableEndData),termChanges,IF(ISOMITTED(lableDelta),"Changes",lableDelta),termNoChanges,"No Changes",zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),termWrongColCount,LET(pStart,TRIMRANGE(endData),pEnd,TRIMRANGE(startData),limitValueDelta,ABS(IF(ISOMITTED(maxTolerance),0,maxTolerance)),combinedData,VSTACK(HSTACK(pStart,MAKEARRAY(ROWS(pStart),1,LAMBDA(r,c,termStart))),HSTACK(pEnd,MAKEARRAY(ROWS(pEnd),1,LAMBDA(r,c,termEnd)))),rowAxis,DROP(combinedData,,-2),numData,INDEX(combinedData,,zColumnCount), zPvt,DROP(PIVOTBY(rowAxis,TAKE(combinedData,,-1),numData,SUM,0,0,,0),1),zStartDataCol,INDEX(zPvt,,zColumnCount),zEndDataCol,INDEX(zPvt,,zColumnCount+1),zDelta,N(zEndDataCol)-N(zStartDataCol),boolDelta,ABS(zDelta)>limitValueDelta, dataWithDelta,HSTACK(zPvt,zDelta),zFilteredData,FILTER(dataWithDelta,boolDelta,termNoChanges),zTopHeader,IF(COUNTA(zFilteredData)>1, MAKEARRAY(1,zColumnCount+2,LAMBDA(r,c,IF(c=zColumnCount,termStart,IF(c=zColumnCount+1,termEnd,IF(c=zColumnCount+2,termChanges,""))))),""),IF(excludeHeader,zFilteredData,IF(COUNTA(zFilteredData)=1,zFilteredData,VSTACK(zTopHeader,zFilteredData)))))))
 ````
 ----
-
-
 
 ## excludeColumns
 Excudes columns as a numeric array. Exactly the opposite of ChooseCols.
@@ -339,8 +337,6 @@ Excudes columns as a numeric array. Exactly the opposite of ChooseCols.
  chkList,hstack(columnsToExclude),keepMask,ISNA(MATCH(idx,chkList, 0)),FILTER(allData,keepMask)))
 ````
 
-
-
 ## FilterMultiple
 Applies the same filter to more than one column.
 
@@ -355,9 +351,9 @@ Applies the same filter to more than one column.
 ````
 =LAMBDA(rng2Filter,ƒeachCell,[returnRange],
     IF(IF(NOT(ISOMITTED(returnRange)),ROWS(returnRange)<>ROWS(rng2Filter)),"#RowCountMismatch",
-    LET(zReturnRng,IF(ISOMITTED(returnRange),rng2Filter,returnRange), zFilter,BYROW(rng2Filter,LAMBDA(aRow,
-    REDUCE(FALSE,aRow,LAMBDA(iPrev,eVal,
-    IF(iPrev=TRUE,TRUE,ƒeachCell(eVal)))))),
+    LET(zReturnRng,IF(ISOMITTED(returnRange),rng2Filter,returnRange), zFilter,BYROW(rng2Filter,LAMBDA(_,
+    REDUCE(FALSE,_,LAMBDA(zOld,zNew,
+    IF(zOld=TRUE,TRUE,ƒeachCell(zNew)))))),
     FILTER(zReturnRng,zFilter,"#noMatches"))))
 ````
 ### Example
@@ -375,7 +371,6 @@ The following examples are based on this starting dataset beginning in cell `a1`
 | Item7 | 4/2/2025 | Cogs | 357 |
 | Item8 | 9/15/2024 | Fines | 271 |
 | Item9 | 1/6/2025 | Fines | 323 |
-
 
 
 #### Result A
