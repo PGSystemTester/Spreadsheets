@@ -307,13 +307,17 @@ IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 
 ## Reconcile
 - Takes two datasets and lists numberical differences
+- Summarizes data if multiple lines exist for same intersection (appended data)
 - Must have same number of columns, rows are dynamic
-- Data is assumed to be far right column
+- Numeric Data must be in last column on right
 - _Optional Paremeters:_
      -  **maxTolerance**: sets maximum amount of delta to not include (defaults to zero if ommited)
      -  **excludeHeader**: set to `TRUE` to exclude header row
      -  **lableStartData**: term to show for starting data
      -  **lableEndData**: term to show for ending data
+
+### Example
+[![Example Usage](https://i.imgur.com/VBfClel.png)](https://i.imgur.com/VBfClel.png)
 
 
 ### Formula
