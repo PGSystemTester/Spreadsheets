@@ -306,15 +306,15 @@ IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 
 
 ## Reconcile
-- Takes two datasets and lists numberical differences
-- Summarizes data if multiple lines exist for same intersection (appended data)
-- Must have same number of columns, rows are dynamic
-- Numeric Data must be in last column on right
+- Displays differences between two data sets with same number of columns.
+- Requires two dataset (_startData_ and _endData_) parameters that:
+    - Must have same number of columns, rows are dynamic
+    - Numeric Data must be last column on right 
 - _Optional Paremeters:_
      -  **maxTolerance**: sets maximum amount of delta to not include (defaults to zero if ommited)
-     -  **excludeHeader**: set to `TRUE` to exclude header row
      -  **lableStartData**: term to show for starting data
      -  **lableEndData**: term to show for ending data
+     -  **lableDelta**: term to show for delta column
 
 ### Example
 [![Example Usage](https://i.imgur.com/VBfClel.png)](https://i.imgur.com/VBfClel.png)
@@ -322,7 +322,7 @@ IF(includeIndex=TRUE,HSTACK(iRow,testRowAxis),testRowAxis)))
 
 ### Formula
 ````F#
-=LAMBDA(startData,endData,[maxTolerance],[excludeHeader],[lableStartData],[lableEndData],[lableDelta],LET(termWrongColCount,"# cols differ",termStart,IF(ISOMITTED(lableStartData),"Starting",lableStartData),termEnd,IF(ISOMITTED(lableEndData),"Ending",lableEndData),termChanges,IF(ISOMITTED(lableDelta),"Changes",lableDelta),termNoChanges,"No Changes",zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),termWrongColCount,LET(pStart,TRIMRANGE(endData),pEnd,TRIMRANGE(startData),limitValueDelta,ABS(IF(ISOMITTED(maxTolerance),0,maxTolerance)),combinedData,VSTACK(HSTACK(pStart,MAKEARRAY(ROWS(pStart),1,LAMBDA(r,c,termStart))),HSTACK(pEnd,MAKEARRAY(ROWS(pEnd),1,LAMBDA(r,c,termEnd)))),rowAxis,DROP(combinedData,,-2),numData,INDEX(combinedData,,zColumnCount), zPvt,DROP(PIVOTBY(rowAxis,TAKE(combinedData,,-1),numData,SUM,0,0,,0),1),zStartDataCol,INDEX(zPvt,,zColumnCount),zEndDataCol,INDEX(zPvt,,zColumnCount+1),zDelta,N(zEndDataCol)-N(zStartDataCol),boolDelta,ABS(zDelta)>limitValueDelta, dataWithDelta,HSTACK(zPvt,zDelta),zFilteredData,FILTER(dataWithDelta,boolDelta,termNoChanges),zTopHeader,IF(COUNTA(zFilteredData)>1, MAKEARRAY(1,zColumnCount+2,LAMBDA(r,c,IF(c=zColumnCount,termStart,IF(c=zColumnCount+1,termEnd,IF(c=zColumnCount+2,termChanges,""))))),""),IF(excludeHeader,zFilteredData,IF(COUNTA(zFilteredData)=1,zFilteredData,VSTACK(zTopHeader,zFilteredData)))))))
+=LAMBDA(startData,endData,[maxTolerance],[lableStartData],[lableEndData],[lableDelta],LET(termWrongColCount,"#colsDiffer", termStart,"a"&IF(ISOMITTED(lableStartData),"Starting",lableStartData),termEnd,"b"&IF(ISOMITTED(lableEndData),"Ending",lableEndData),termChanges,IF(ISOMITTED(lableDelta),"Changes",lableDelta),termNoChanges,"No Changes",zTolAmount,IF(ISOMITTED(maxTolerance),0,maxTolerance),zColumnCount,COLUMNS(startData),IF(zColumnCount<>COLUMNS(endData),termWrongColCount,LET(zBuildRowAXFx,LAMBDA(_aRng,_zTerm,LET(aData,TRIMRANGE(_aRng),skipBlanks,FILTER(aData,IF(ISNUMBER(INDEX(aData,,zColumnCount)),INDEX(aData,,zColumnCount)<>0)),HSTACK(MAKEARRAY(ROWS(skipBlanks),1,LAMBDA(r,c,_zTerm)),skipBlanks))),zCombinedData,VSTACK(zBuildRowAXFx(startData,termStart),zBuildRowAXFx(endData,termEnd)),zPvt,PIVOTBY(DROP(DROP(zCombinedData,,1),,-1),TAKE(zCombinedData,,1),TAKE(zCombinedData,,-1),SUM,0,0,,0),endNumCols,TAKE(DROP(zPvt,1),,-2),iDeltas,N(INDEX(endNumCols,,2))-N(INDEX(endNumCols,,1)),zFilteredData,FILTER(HSTACK(DROP(zPvt,1),iDeltas),ABS(iDeltas)>zTolAmount,FALSE),addHeaers,IF(COLUMNS(zFilteredData)=1,termNoChanges,VSTACK(HSTACK(IFERROR(MID(TAKE(zPvt,1),2,99),""),termChanges),zFilteredData)),addHeaers))))
 ````
 ----
 
